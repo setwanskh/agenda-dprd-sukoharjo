@@ -23,3 +23,14 @@ input[type=checkbox]{width:auto;margin:0 .3rem 0 0}.ck{display:flex;align-items:
 .dng{border-color:#a33}.warn{color:#ffb4b4}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .tpv{display:grid;gap:.3rem;text-align:center;padding:.8rem;border-radius:.4rem;margin:.7rem 0;border:1px solid #444}.tpv i{font-style:normal;padding:.35rem;border-radius:.2rem}
+
+/* ===== Admin di HP ===== */
+@media (max-width: 640px) {
+  .adm { padding: .6rem }
+  .adm h1 { font-size: 1.4rem }
+  .adt { font-size: 1.15rem }
+  .adc { font-size: 1.6rem; text-align: left }
+  .btn { padding: .55rem .8rem }
+  .mrow { flex-wrap: wrap }
+  .inl { width: 100% }
+}

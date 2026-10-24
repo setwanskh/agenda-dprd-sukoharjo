@@ -35,3 +35,30 @@ font-size:calc(9px + .55vw);height:100vh;display:flex;flex-direction:column;gap:
 .ft{display:flex;justify-content:space-between;font-size:.7em;color:var(--tx2)}
 .ft button{background:none;color:inherit;font:inherit;border:1px solid var(--ac);border-radius:.3em;padding:.2em .6em;cursor:pointer}
 .msg{margin:20vh auto;max-width:30em;text-align:center;padding:1em}
+
+/* ===== Tampilan HP / layar sempit (TV tetap memakai tampilan di atas) ===== */
+@media (max-width: 900px) {
+  .disp { height: auto; min-height: 100vh; overflow: visible; font-size: 15px; padding: .8em; gap: .7em }
+  .hd { grid-template-columns: 3.6em 1fr 3.6em; gap: .5em }
+  .hd img { max-height: 3.4em }
+  .hd h1 { font-size: 1.15em; letter-spacing: .03em }
+  .hd h2 { font-size: .85em; letter-spacing: .14em }
+  .dt { font-size: 1em }
+  .clk { font-size: 1.5em }
+  .main, .main.one { grid-template-columns: 1fr }
+  .list { overflow: visible }
+  .disp .rowh { display: none }
+  .disp .list .row { grid-template-columns: 1.8em 1fr; grid-template-areas: "no ag" "no wk" "no tp" "no st"; gap: .15em .6em; padding: .6em .7em; align-items: start }
+  .disp .list .row > * { text-align: left }
+  .row > :nth-child(1) { grid-area: no }
+  .row > :nth-child(2) { grid-area: ag }
+  .row > :nth-child(3) { grid-area: wk; color: var(--tx2) }
+  .row > :nth-child(4) { grid-area: tp; color: var(--tx2) }
+  .row > :nth-child(5) { grid-area: st }
+  .row > :empty { display: none }
+  .bd { justify-self: start; margin-top: .2em }
+  .side { display: grid; grid-template-columns: 1fr; gap: .7em }
+  .qr { max-width: 15em; margin: 0 auto .4em }
+  .empty { font-size: 1.2em; padding: 2em 0 }
+  .ft { font-size: .8em }
+}
