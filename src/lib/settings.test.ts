@@ -35,3 +35,16 @@ describe('kontras tema (WCAG)', () => {
     })
   }
 })
+
+describe('email dan website ganda', () => {
+  it('email dan website lama (satu teks) menjadi daftar', () => {
+    const c = mergeSettings({ complaint: { email: 'a@x.id', site: 'x.id' } }).complaint
+    expect(c.email).toEqual(['a@x.id'])
+    expect(c.site).toEqual(['x.id'])
+  })
+  it('dua email dan dua website dipertahankan', () => {
+    const c = mergeSettings({ complaint: { email: ['a@x.id', 'b@x.id'], site: ['x.id', 'y.id'] } }).complaint
+    expect(c.email).toHaveLength(2)
+    expect(c.site).toEqual(['x.id', 'y.id'])
+  })
+})

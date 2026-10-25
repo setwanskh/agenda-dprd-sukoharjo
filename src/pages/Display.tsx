@@ -25,7 +25,8 @@ export default function Display() {
     .map(a => ({ ...a, st: hitungStatus(a.start_time, a.end_time, now.menit, s.duration) }))
     .filter(a => s.show.showDone || a.st !== 'selesai')
   const c = s.complaint
-  const adaPengaduan = Boolean(c.phone || c.email || c.site || c.hours.length || c.note || c.youtube || c.instagram || c.facebook || c.tiktok)
+  const adaPengaduan = Boolean(c.phone || c.email.length || c.site.length || c.note || c.youtube || c.instagram || c.facebook || c.tiktok)
+  const adaJam = c.hours.length > 0
   const adaSurvei = s.surveyOn && /^https?:\/\//i.test(s.surveyUrl)
   const dens = rows.length > 11 ? 'dense vdense' : rows.length > 7 ? 'dense' : ''
 
@@ -42,7 +43,7 @@ export default function Display() {
         <div className="r">{s.logoRight && s.logoRightOn && <img src={s.logoRight} alt="" />}</div>
       </div>
 
-      <div className={'main' + (adaSurvei || adaPengaduan ? '' : ' one')}>
+      <div className={'main' + (adaSurvei || adaPengaduan || adaJam ? '' : ' one')}>
         <div className={'list ' + dens}>
           {rows.length === 0 && <div className="empty">BELUM ADA AGENDA HARI INI</div>}
           {rows.length > 0 && (
@@ -62,7 +63,7 @@ export default function Display() {
           ))}
         </div>
 
-        {(adaSurvei || adaPengaduan) && (
+        {(adaSurvei || adaPengaduan || adaJam) && (
           <div className="side">
             {adaSurvei && (
               <div className="pn ctr"><h3>{s.surveyTitle}</h3><Qr url={s.surveyUrl} /><small>{s.surveyNote}</small></div>
@@ -70,14 +71,18 @@ export default function Display() {
             {adaPengaduan && (
               <div className="pn"><h3>INFORMASI DAN PENGADUAN</h3>
                 {c.phone && <div className="ln"><Ikon n="phone" /><span>{c.phone}</span></div>}
-                {c.email && <div className="ln"><Ikon n="email" /><span>{c.email}</span></div>}
-                {c.site && <div className="ln"><Ikon n="web" /><span>{c.site}</span></div>}
-                {c.hours.map((h, i) => <div className="ln" key={i}><Ikon n="clock" /><span>{h}</span></div>)}
+                {c.email.map((e, i) => <div className="ln" key={'e' + i}><Ikon n="email" /><span>{e}</span></div>)}
+                {c.site.map((w, i) => <div className="ln" key={'w' + i}><Ikon n="web" /><span>{w}</span></div>)}
                 {c.youtube && <div className="ln"><Ikon n="youtube" /><span>{c.youtube}</span></div>}
                 {c.instagram && <div className="ln"><Ikon n="instagram" /><span>{c.instagram}</span></div>}
                 {c.facebook && <div className="ln"><Ikon n="facebook" /><span>{c.facebook}</span></div>}
                 {c.tiktok && <div className="ln"><Ikon n="tiktok" /><span>{c.tiktok}</span></div>}
                 {c.note && <div className="nt">{c.note}</div>}
+              </div>
+            )}
+            {adaJam && (
+              <div className="pn"><h3>JAM PELAYANAN</h3>
+                {c.hours.map((h, i) => <div className="ln" key={i}><Ikon n="clock" /><span>{h}</span></div>)}
               </div>
             )}
           </div>

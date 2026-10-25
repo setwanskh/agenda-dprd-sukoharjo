@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { THEMES, type Settings, type ThemeKey } from '../lib/settings'
-import { C, F, useNotify } from './ui'
+import { C, Daftar, F, useNotify } from './ui'
 
 export default function Pengaturan({ settings, reload }: { settings: Settings; reload: () => void }) {
   const notify = useNotify()
   const [d, setD] = useState<Settings>(settings)
   const [pw, setPw] = useState('')
   const up = (p: Partial<Settings>) => setD(x => ({ ...x, ...p }))
-  const cp = (k: Exclude<keyof Settings['complaint'], 'hours'>) => (v: string) => setD(x => ({ ...x, complaint: { ...x.complaint, [k]: v } }))
+  const cd = (k: 'email' | 'site' | 'hours') => (v: string[]) => setD(x => ({ ...x, complaint: { ...x.complaint, [k]: v } }))
+  const cp = (k: Exclude<keyof Settings['complaint'], 'hours' | 'email' | 'site'>) => (v: string) => setD(x => ({ ...x, complaint: { ...x.complaint, [k]: v } }))
   const sh = (k: keyof Settings['show']) => (v: boolean) => setD(x => ({ ...x, show: { ...x.show, [k]: v } }))
 
   async function unggah(sisi: 'logoLeft' | 'logoRight', file?: File) {
@@ -24,7 +25,8 @@ export default function Pengaturan({ settings, reload }: { settings: Settings; r
   async function simpan() {
     if (d.surveyUrl && !/^https?:\/\//i.test(d.surveyUrl)) return notify('URL survei harus diawali http:// atau https://', true)
     if (!d.org.trim()) return notify('Nama instansi tidak boleh kosong', true)
-    const data = { ...d, complaint: { ...d.complaint, hours: d.complaint.hours.map(h => h.trim()).filter(Boolean) } }
+    const bersih = (a: string[]) => a.map(s => s.trim()).filter(Boolean)
+    const data = { ...d, complaint: { ...d.complaint, hours: bersih(d.complaint.hours), email: bersih(d.complaint.email), site: bersih(d.complaint.site) } }
     const r = await supabase.from('app_settings').upsert({ id: 1, data })
     if (r.error) return notify('Gagal menyimpan: ' + r.error.message, true)
     notify('Pengaturan tersimpan'); reload()
@@ -35,9 +37,6 @@ export default function Pengaturan({ settings, reload }: { settings: Settings; r
     if (r.error) return notify('Gagal: ' + r.error.message, true)
     setPw(''); notify('Kata sandi diganti')
   }
-  const setJam = (i: number, v: string) => setD(x => ({ ...x, complaint: { ...x.complaint, hours: x.complaint.hours.map((h, k) => (k === i ? v : h)) } }))
-  const hapusJam = (i: number) => setD(x => ({ ...x, complaint: { ...x.complaint, hours: x.complaint.hours.filter((_, k) => k !== i) } }))
-  const tambahJam = () => setD(x => ({ ...x, complaint: { ...x.complaint, hours: [...x.complaint.hours, ''] } }))
   const logo = (sisi: 'logoLeft' | 'logoRight', judul: string) => <label>{judul}
     <input type="file" accept="image/png,image/jpeg,image/webp" onChange={e => unggah(sisi, e.target.files?.[0])} />
     {d[sisi] && <><img className="pv" src={d[sisi]} alt="" /><br /><button className="btn x" onClick={() => up({ [sisi]: '' } as Partial<Settings>)}>Hapus logo</button></>}</label>
@@ -63,16 +62,16 @@ export default function Pengaturan({ settings, reload }: { settings: Settings; r
       <F l="Keterangan singkat" v={d.surveyNote} on={v => up({ surveyNote: v })} /><C l="Aktifkan panel survei" v={d.surveyOn} on={v => up({ surveyOn: v })} /></div>
       {!d.surveyUrl && <small>URL belum diisi, jadi panel survei tidak tampil di display.</small>}</div>
     <div className="card"><h3>Informasi dan pengaduan</h3><div className="g">
-      <F l="Telepon" v={d.complaint.phone} on={cp('phone')} /><F l="Email" v={d.complaint.email} on={cp('email')} /><F l="Situs / website" v={d.complaint.site} on={cp('site')} />
+      <F l="Telepon" v={d.complaint.phone} on={cp('phone')} />
       <F l="YouTube" v={d.complaint.youtube} on={cp('youtube')} ph="nama kanal" /><F l="Instagram" v={d.complaint.instagram} on={cp('instagram')} ph="@akun" />
       <F l="Facebook" v={d.complaint.facebook} on={cp('facebook')} ph="nama halaman" /><F l="TikTok" v={d.complaint.tiktok} on={cp('tiktok')} ph="@akun" />
       <F l="Petunjuk singkat" v={d.complaint.note} on={cp('note')} /></div>
-      <h3 style={{ marginTop: '1rem' }}>Jam pelayanan</h3>
-      {d.complaint.hours.map((h, i) => <div className="mrow" key={i}>
-        <input value={h} placeholder="Contoh: Senin – Kamis : 07.00 – 15.30" onChange={e => setJam(i, e.target.value)} />
-        <button className="btn x" onClick={() => hapusJam(i)}>Hapus</button></div>)}
-      <button className="btn" onClick={tambahJam}>+ Tambah jam pelayanan</button>
-      <p><small>Boleh lebih dari satu baris (misalnya Senin–Kamis dan Jumat). Kosongkan semua jika belum ada; panel tidak akan tampil.</small></p></div>
+      <Daftar judul="Email" v={d.complaint.email} on={cd('email')} ph="nama@instansi.go.id" tambah="+ Tambah email" />
+      <Daftar judul="Website" v={d.complaint.site} on={cd('site')} ph="alamat.situs.go.id" tambah="+ Tambah website" />
+      <p><small>Boleh lebih dari satu email dan website. Kosongkan semua jika belum ada; panel tidak akan tampil.</small></p></div>
+    <div className="card"><h3>Jam pelayanan (kotak tersendiri di display)</h3>
+      <Daftar judul="Jam pelayanan" v={d.complaint.hours} on={cd('hours')} ph="Contoh: Senin – Kamis : 07.00 – 15.30" tambah="+ Tambah jam pelayanan" />
+      <p><small>Misalnya satu baris untuk Senin–Kamis dan satu baris untuk Jumat. Kosongkan jika belum ada; kotak tidak akan tampil.</small></p></div>
     <p><button className="btn p" onClick={simpan}>Simpan pengaturan</button></p>
     <div className="card"><h3>Akun admin</h3><div className="g"><F l="Kata sandi baru (min. 8 karakter)" type="password" v={pw} on={setPw} /></div>
       <p><button className="btn" onClick={gantiPw}>Ganti kata sandi</button></p></div>

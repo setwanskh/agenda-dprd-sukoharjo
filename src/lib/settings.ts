@@ -7,7 +7,7 @@ export interface Settings {
   show: { akan_datang: boolean; berlangsung: boolean; selesai: boolean; showDone: boolean }
   surveyTitle: string; surveyNote: string; surveyUrl: string; surveyOn: boolean
   logoLeft: string; logoRight: string; logoRightOn: boolean
-  complaint: { phone: string; email: string; site: string; hours: string[]; note: string; youtube: string; instagram: string; facebook: string; tiktok: string }
+  complaint: { phone: string; email: string[]; site: string[]; hours: string[]; note: string; youtube: string; instagram: string; facebook: string; tiktok: string }
 }
 
 export const DEFAULTS: Settings = {
@@ -15,19 +15,21 @@ export const DEFAULTS: Settings = {
   show: { akan_datang: true, berlangsung: true, selesai: true, showDone: true },
   surveyTitle: 'SURVEI KEPUASAN PELAYANAN TAHUN 2026', surveyNote: 'Pindai QR code untuk mengisi survei', surveyUrl: '', surveyOn: true,
   logoLeft: '', logoRight: '', logoRightOn: true,
-  complaint: { phone: '', email: '', site: '', hours: [], note: '', youtube: '', instagram: '', facebook: '', tiktok: '' },
+  complaint: { phone: '', email: [], site: [], hours: [], note: '', youtube: '', instagram: '', facebook: '', tiktok: '' },
 }
 
-/** Menggabungkan data database dengan nilai bawaan. Jam pelayanan lama (satu teks) otomatis menjadi daftar. */
+/** Nilai lama berupa satu teks otomatis menjadi daftar; daftar dibersihkan dari isi non-teks. */
+const daftar = (v: unknown): string[] =>
+  Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : typeof v === 'string' && v ? [v] : []
+
+/** Menggabungkan data database dengan nilai bawaan agar kolom yang belum ada tidak membuat error. */
 export function mergeSettings(raw: unknown): Settings {
   const r = (raw ?? {}) as Record<string, unknown>
   const c = (r.complaint ?? {}) as Record<string, unknown>
-  const h = c.hours
-  const hours = Array.isArray(h) ? h.filter((x): x is string => typeof x === 'string') : typeof h === 'string' && h ? [h] : []
   return {
     ...DEFAULTS, ...(r as Partial<Settings>),
     show: { ...DEFAULTS.show, ...(r.show as Partial<Settings['show']>) },
-    complaint: { ...DEFAULTS.complaint, ...(c as Partial<Settings['complaint']>), hours },
+    complaint: { ...DEFAULTS.complaint, ...(c as Partial<Settings['complaint']>), email: daftar(c.email), site: daftar(c.site), hours: daftar(c.hours) },
   }
 }
 
