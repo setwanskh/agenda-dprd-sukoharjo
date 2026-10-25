@@ -6,10 +6,8 @@ import { THEMES, terapkanTema } from '../lib/settings'
 import { hitungStatus, urutkan } from '../lib/waktu'
 import Qr from '../components/Qr'
 import Ikon from '../components/Ikon'
+import DaftarAgenda from '../components/DaftarAgenda'
 import '../display.css'
-
-const LABEL = { akan_datang: 'AKAN DATANG', berlangsung: 'SEDANG BERLANGSUNG', selesai: 'SELESAI' } as const
-const jam = (t: string) => t.slice(0, 5).replace(':', '.')
 
 function layarPenuh() {
   try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen() } catch { /* diblokir browser */ }
@@ -21,7 +19,6 @@ export default function Display() {
   useEffect(() => { terapkanTema(s.theme) }, [s.theme])
 
   if (!configured) return <div className="disp"><div className="msg">File <code>.env</code> belum diisi. Lihat README.</div></div>
-
   if (!temaSiap) return <div className="muat">Memuat…</div>
 
   const vars = (THEMES[s.theme] ?? THEMES.mhe).vars as React.CSSProperties
@@ -32,7 +29,6 @@ export default function Display() {
   const adaPengaduan = Boolean(c.phone || c.email.length || c.site.length || c.note || c.youtube || c.instagram || c.facebook || c.tiktok)
   const adaJam = c.hours.length > 0
   const adaSurvei = s.surveyOn && /^https?:\/\//i.test(s.surveyUrl)
-  const dens = rows.length > 11 ? 'dense vdense' : rows.length > 7 ? 'dense' : ''
 
   return (
     <div className="disp" style={vars}>
@@ -48,24 +44,10 @@ export default function Display() {
       </div>
 
       <div className={'main' + (adaSurvei || adaPengaduan || adaJam ? '' : ' one')}>
-        <div className={'list ' + dens}>
+        <div className="list">
           {!agendaSiap && <div className="empty">Memuat agenda…</div>}
           {agendaSiap && rows.length === 0 && <div className="empty">BELUM ADA AGENDA HARI INI</div>}
-          {agendaSiap && rows.length > 0 && (
-            <div className="row rowh"><span>No</span><span>Agenda</span><span>Waktu</span><span>Tempat</span><span>Status</span></div>
-          )}
-          {agendaSiap && rows.map((a, i) => (
-            <div key={a.id} className={'row ' + a.st}>
-              <span>{i + 1}</span>
-              <div>
-                <span className="jn">{a.activity_type}{a.origin ? ' · ' + a.origin : ''}</span>
-                <span className="nm">{a.title}{a.detail ? ' – ' + a.detail : ''}</span>
-              </div>
-              <span className="tm">{jam(a.start_time)}{a.end_time ? ' – ' + jam(a.end_time) : ''} WIB</span>
-              <span>{a.room_name}</span>
-              {s.show[a.st] ? <span className={'bd ' + a.st}>{LABEL[a.st]}</span> : <span />}
-            </div>
-          ))}
+          {agendaSiap && rows.length > 0 && <DaftarAgenda rows={rows} show={s.show} />}
         </div>
 
         {(adaSurvei || adaPengaduan || adaJam) && (
