@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAdmin } from '../auth/useAdmin'
 import { useNow } from '../lib/useNow'
 import { configured, supabase } from '../lib/supabase'
+import { terapkanTema } from '../lib/settings'
 import { hitungStatus, urutkan } from '../lib/waktu'
 import { useAdminData } from '../admin/useAdminData'
 import { NotifyProvider } from '../admin/ui'
@@ -20,7 +21,7 @@ function Login() {
   return <div className="adm"><div className="card login"><h3>Login Admin</h3>
     <label>Email<input type="email" value={email} onChange={e => setEmail(e.target.value)} /></label>
     <label>Kata sandi<input type="password" value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === 'Enter' && masuk()} /></label>
-    {err && <p style={{ color: '#ff8a8a' }}>{err}</p>}<p><button className="btn p" onClick={masuk}>Masuk</button></p></div></div>
+    {err && <p style={{ color: 'var(--wr)' }}>{err}</p>}<p><button className="btn p" onClick={masuk}>Masuk</button></p></div></div>
 }
 
 function Dashboard({ data }: { data: ReturnType<typeof useAdminData> }) {
@@ -48,6 +49,7 @@ export default function Admin() {
 
 function Panel() {
   const now = useNow(); const data = useAdminData(); const [tab, setTab] = useState<Tab>('dash')
+  useEffect(() => { if (data.ready) terapkanTema(data.settings.theme) }, [data.ready, data.settings.theme])
   return <div className="adm">
     <header><div><h1>Dashboard Agenda Kantor</h1><div className="adt">{now.panjang}</div></div>
       <div><div className="adc">{now.jam} WIB</div><a className="btn" href="/" target="_blank" rel="noreferrer">Lihat Display</a> <button className="btn" onClick={() => supabase.auth.signOut()}>Keluar</button></div></header>

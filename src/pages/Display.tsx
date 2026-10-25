@@ -1,7 +1,8 @@
+import { useEffect } from 'react'
 import { configured } from '../lib/supabase'
 import { useNow } from '../lib/useNow'
 import { useDisplayData } from '../lib/useDisplayData'
-import { THEMES } from '../lib/settings'
+import { THEMES, terapkanTema } from '../lib/settings'
 import { hitungStatus, urutkan } from '../lib/waktu'
 import Qr from '../components/Qr'
 import Ikon from '../components/Ikon'
@@ -16,12 +17,15 @@ function layarPenuh() {
 
 export default function Display() {
   const now = useNow()
-  const { agendas, settings: s, online } = useDisplayData(now.tanggal)
+  const { agendas, settings: s, online, temaSiap, agendaSiap } = useDisplayData(now.tanggal)
+  useEffect(() => { terapkanTema(s.theme) }, [s.theme])
 
   if (!configured) return <div className="disp"><div className="msg">File <code>.env</code> belum diisi. Lihat README.</div></div>
 
+  if (!temaSiap) return <div className="muat">Memuat…</div>
+
   const vars = (THEMES[s.theme] ?? THEMES.mhe).vars as React.CSSProperties
-  const rows = urutkan(agendas)
+  const rows = urutkan(agendas.filter(a => a.agenda_date === now.tanggal))
     .map(a => ({ ...a, st: hitungStatus(a.start_time, a.end_time, now.menit, s.duration) }))
     .filter(a => s.show.showDone || a.st !== 'selesai')
   const c = s.complaint
@@ -45,11 +49,12 @@ export default function Display() {
 
       <div className={'main' + (adaSurvei || adaPengaduan || adaJam ? '' : ' one')}>
         <div className={'list ' + dens}>
-          {rows.length === 0 && <div className="empty">BELUM ADA AGENDA HARI INI</div>}
-          {rows.length > 0 && (
+          {!agendaSiap && <div className="empty">Memuat agenda…</div>}
+          {agendaSiap && rows.length === 0 && <div className="empty">BELUM ADA AGENDA HARI INI</div>}
+          {agendaSiap && rows.length > 0 && (
             <div className="row rowh"><span>No</span><span>Agenda</span><span>Waktu</span><span>Tempat</span><span>Status</span></div>
           )}
-          {rows.map((a, i) => (
+          {agendaSiap && rows.map((a, i) => (
             <div key={a.id} className={'row ' + a.st}>
               <span>{i + 1}</span>
               <div>

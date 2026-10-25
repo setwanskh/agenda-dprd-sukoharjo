@@ -44,7 +44,7 @@ const terang = (t1: string, t2: string, t3: string, ac: string, tx: string, tx2:
   '--pn': 'rgba(255,255,255,.8)', '--rw': 'rgba(255,255,255,.95)', '--rwon': rgba(ac, 0.13), '--onac': '#FFFFFF', '--bd': rgba(ac, 0.4),
 })
 
-export const THEMES: Record<ThemeKey, { label: string; vars: Record<string, string> }> = {
+const RAW: Record<ThemeKey, { label: string; vars: Record<string, string> }> = {
   mhe: { label: 'Merah–Hitam–Emas (bawaan)', vars: gelap('#641C28', '#3A1018', '#0D0D0F', '#C6A15B') },
   me:  { label: 'Merah–Emas', vars: gelap('#641C28', '#3A1018', '#641C28', '#C6A15B') },
   mh:  { label: 'Merah–Hitam', vars: gelap('#641C28', '#171719', '#0D0D0F', '#D5CDD0') },
@@ -69,4 +69,32 @@ export const THEMES: Record<ThemeKey, { label: string; vars: Record<string, stri
   hm:  { label: 'Hijau Mint (cerah)', vars: terang('#F3FBF6', '#DDF2E4', '#C5E8D1', '#1E7A4A', '#0E2E1D', '#3F6652') },
   oh:  { label: 'Oranye Hangat (cerah)', vars: terang('#FFF8F0', '#FDE6CF', '#F9D2AC', '#B5500E', '#3B1A08', '#6B4A35') },
   ts:  { label: 'Tosca (cerah)', vars: terang('#F1FBFB', '#D5F0F0', '#B9E4E4', '#0E7C86', '#0A2E32', '#3C6468') },
+}
+
+const lum = (hex: string) => { const n = parseInt(hex.slice(1), 16); const c = [n >> 16, (n >> 8) & 255, n & 255].map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4 }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2] }
+
+/** Semua tema; warna peringatan (--wr) menyesuaikan: terang di tema gelap, merah tua di tema terang. */
+export const THEMES = Object.fromEntries(
+  Object.entries(RAW).map(([k, t]) => [k, { ...t, vars: { ...t.vars, '--wr': lum(t.vars['--t2']) > 0.5 ? '#b3261e' : '#ffb4b4' } }])
+) as unknown as typeof RAW
+
+const KUNCI = 'agenda-settings-v1'
+
+/** Pengaturan terakhir yang tersimpan di browser ini, agar tema langsung benar sejak layar pertama muncul. */
+export function muatCache(): Settings | null {
+  try { const r = localStorage.getItem(KUNCI); return r ? mergeSettings(JSON.parse(r)) : null } catch { return null }
+}
+export function simpanCache(s: Settings) {
+  try {
+    localStorage.setItem(KUNCI, JSON.stringify(s))
+    localStorage.setItem('agenda-tema', JSON.stringify({ bg: (THEMES[s.theme] ?? THEMES.mhe).vars['--t2'] }))
+  } catch { /* penyimpanan browser diblokir: abaikan */ }
+}
+
+/** Menerapkan warna tema ke seluruh halaman (display maupun admin). */
+export function terapkanTema(theme: ThemeKey) {
+  const v = (THEMES[theme] ?? THEMES.mhe).vars
+  const st = document.documentElement.style
+  for (const [k, val] of Object.entries(v)) st.setProperty(k, val)
+  st.background = v['--t2']
 }

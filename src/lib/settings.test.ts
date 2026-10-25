@@ -48,3 +48,16 @@ describe('email dan website ganda', () => {
     expect(c.site).toEqual(['x.id', 'y.id'])
   })
 })
+
+import { muatCache, simpanCache } from './settings'
+describe('cache pengaturan', () => {
+  it('tanpa localStorage tidak error dan mengembalikan null', () => { expect(muatCache()).toBeNull() })
+  it('simpan lalu muat mengembalikan tema yang sama', () => {
+    const mem: Record<string, string> = {}
+    const g = globalThis as unknown as { localStorage?: unknown }
+    g.localStorage = { getItem: (k: string) => mem[k] ?? null, setItem: (k: string, v: string) => { mem[k] = v } }
+    simpanCache(mergeSettings({ theme: 'bl' }))
+    expect(muatCache()?.theme).toBe('bl')
+    delete g.localStorage
+  })
+})
